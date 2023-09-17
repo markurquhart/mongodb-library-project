@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const bookForm = document.getElementById("book-form");
-    const bookTableBody = document.getElementById("book-list-table-body");
+    const bookList = document.getElementById("book-list");
     const notification = document.getElementById("notification");
 
     bookForm.addEventListener("submit", async (e) => {
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 const addedBook = await response.json();
-                addBookToTable(addedBook);
+                addBookToList(addedBook);
                 notifyUser("Book added successfully!", "success");
                 bookForm.reset();
                 loadBooks();
@@ -38,14 +38,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    const deleteBook = async (bookId) => {
+        try {
+            const response = await fetch(`/books/${bookId}`, {
+                method: "DELETE",
+            });
+
+            if (response.ok) {
+                loadBooks();
+                notifyUser("Book deleted successfully!", "success");
+            } else {
+                notifyUser("Failed to delete the book. Please try again.", "error");
+            }
+        } catch (error) {
+            console.error("Error during book deletion:", error);
+            notifyUser("Failed to delete the book. Please check your server.", "error");
+        }
+    };
+
     const loadBooks = async () => {
         try {
             const response = await fetch("/books");
 
             if (response.ok) {
                 const books = await response.json();
-                bookTableBody.innerHTML = '';  // Clear the table
-                books.forEach(addBookToTable);
+                bookList.innerHTML = '';  // Clear the list
+                books.forEach(addBookToList);
             } else {
                 notifyUser("Failed to fetch the list of books.", "error");
             }
@@ -55,34 +73,42 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const addBookToTable = (book) => {
-        const row = bookTableBody.insertRow();
+    const addBookToList = (book) => {
+        const row = document.createElement('tr');
+        const titleTd = document.createElement('td');
+        titleTd.textContent = book.title;
+        row.appendChild(titleTd);
 
-        const titleCell = row.insertCell(0);
-        titleCell.textContent = book.title;
+        const authorTd = document.createElement('td');
+        authorTd.textContent = book.author;
+        row.appendChild(authorTd);
 
-        const authorCell = row.insertCell(1);
-        authorCell.textContent = book.author;
+        const timestampTd = document.createElement('td');
+        timestampTd.textContent = new Date(book.createdAt).toLocaleString();
+        row.appendChild(timestampTd);
 
-        const addedCell = row.insertCell(2);
-        addedCell.textContent = new Date(book.dateAdded).toLocaleString();
+        const editTd = document.createElement('td');
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.className = 'btn btn-warning';
+        // TODO: Add edit functionality
+        editTd.appendChild(editButton);
+        row.appendChild(editTd);
 
-        const editCell = row.insertCell(3);
-        const editButton = document.createElement("button");
-        editButton.textContent = "Edit";
-        editButton.className = "btn btn-warning";
-        editCell.appendChild(editButton);
+        const deleteTd = document.createElement('td');
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'btn btn-danger';
+        deleteButton.onclick = () => deleteBook(book._id);
+        deleteTd.appendChild(deleteButton);
+        row.appendChild(deleteTd);
 
-        const deleteCell = row.insertCell(4);
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Delete";
-        deleteButton.className = "btn btn-danger";
-        deleteCell.appendChild(deleteButton);
+        bookList.appendChild(row);
     };
 
     const notifyUser = (message, type) => {
         notification.textContent = message;
-        notification.className = `alert alert-${type}`;
+        notification.className = type;
         setTimeout(() => {
             notification.textContent = "";
             notification.className = "";

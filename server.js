@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const express = require('express');
-const { MongoClient } = require('mongodb');
-const cors = require('cors');  
+const { MongoClient, ObjectId } = require('mongodb');
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
@@ -10,7 +10,7 @@ const PORT = 3000;
 const uri = process.env.MONGO_CONNECT_STR;
 
 // Use the CORS middleware
-app.use(cors()); 
+app.use(cors());
 
 // Middleware for parsing JSON requests
 app.use(express.json());
@@ -33,19 +33,39 @@ async function initializeServer() {
         });
 
         app.get('/', (req, res) => {
-            console.log("Root route hit!"); 
+            console.log("Root route hit!");
             res.send('Hello, MongoDB Library!');
         });
 
         app.get('/books', async (req, res) => {
-            console.log("Fetching books...");  
+            console.log("Fetching books...");
             try {
                 const books = await db.collection('books').find().toArray();
-                console.log("Books fetched:", books);  
+                console.log("Books fetched:", books);
                 res.json(books);
             } catch (err) {
                 console.error("Error fetching books:", err);
                 res.status(500).send('Error fetching books.');
+            }
+        });
+
+        app.delete('/books/:id', async (req, res) => {
+            const bookId = req.params.id;
+        
+            try {
+                // Change the conversion to use ObjectId
+                const result = await db.collection('books').deleteOne({ _id: new ObjectId(bookId) });
+        
+                if (result.deletedCount === 1) {
+                    res.status(200).json({ message: "Book deleted successfully." });
+                } else {
+                    console.error("No book found with this ID:", bookId);
+                    res.status(404).json({ error: "No book found with this ID." });
+                }
+        
+            } catch (error) {
+                console.error("Error deleting book:", error);
+                res.status(500).json({ error: "Failed to delete book." });
             }
         });
 
