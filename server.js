@@ -58,22 +58,22 @@ async function initializeServer() {
         });
 
         app.post('/books', (req, res) => {
-            console.log("Trying to add a book:", req.body);  // New log
+            console.log("Trying to add a book:", req.body);
             const newBook = {
                 title: req.body.title,
                 author: req.body.author,
             };
-
+        
             db.collection('books').insertOne(newBook, (err, result) => {
                 if (err) {
-                    console.error("Error adding book:", err);  // New log
+                    console.error("Error while inserting book:", err); // enhanced log
                     res.status(500).send('Failed to add book.');
                     return;
                 }
-                console.log("Book added:", result.ops[0]);  // New log
+                console.log("Book successfully added:", result.ops[0]); // enhanced log
                 res.status(201).send(result.ops[0]);
             });
-        });
+        });        
 
     } catch (err) {
         console.error('Failed to connect to the database.', err);
