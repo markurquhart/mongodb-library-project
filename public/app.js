@@ -28,27 +28,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 addBookToList(addedBook);
                 notifyUser("Book added successfully!", "success");
                 bookForm.reset();
+
+                // Reload the books after adding a new one
+                loadBooks();
             } else {
                 notifyUser("Failed to add the book. Please try again.", "error");
             }
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error during book addition:", error);
             notifyUser("Failed to add the book. Please check your server.", "error");
         }
     });
 
     const loadBooks = async () => {
+        console.log("Fetching books...");
         try {
             const response = await fetch("/books");
 
             if (response.ok) {
                 const books = await response.json();
+                console.log("Books fetched:", books);
+                // Clear previous books and display new list
+                bookList.innerHTML = '';
                 books.forEach(addBookToList);
             } else {
+                console.error("Failed to fetch books: Server returned non-OK status");
                 notifyUser("Failed to fetch the list of books.", "error");
             }
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error fetching books:", error);
             notifyUser("Failed to fetch the list of books. Please check your server.", "error");
         }
     };
@@ -61,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const notifyUser = (message, type) => {
         notification.textContent = message;
-        notification.className = type; // This will help you style success and error messages differently
+        notification.className = type;
         setTimeout(() => {
             notification.textContent = "";
             notification.className = "";
