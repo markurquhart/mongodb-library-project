@@ -25,8 +25,23 @@
     </form>
 
     <h2 class="mt-5">List of Books</h2>
-    <ul id="book-list"></ul>
-    <div id="notification"></div>
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Book Name</th>
+                <th>Author Name</th>
+                <th>Added</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody id="book-list">
+            <!-- Book rows will be added here -->
+        </tbody>
+    </table>
+    
+    <div id="notification" class="mt-3"></div>
 </div>
 
 <script src="app.js" defer></script>

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const bookForm = document.getElementById("book-form");
-    const bookList = document.getElementById("book-list");
+    const bookTableBody = document.getElementById("book-list-table-body");
     const notification = document.getElementById("notification");
 
     bookForm.addEventListener("submit", async (e) => {
@@ -25,11 +25,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (response.ok) {
                 const addedBook = await response.json();
-                addBookToList(addedBook);
+                addBookToTable(addedBook);
                 notifyUser("Book added successfully!", "success");
                 bookForm.reset();
-
-                // Reload the books after adding a new one
                 loadBooks();
             } else {
                 notifyUser("Failed to add the book. Please try again.", "error");
@@ -41,18 +39,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const loadBooks = async () => {
-        console.log("Fetching books...");
         try {
             const response = await fetch("/books");
 
             if (response.ok) {
                 const books = await response.json();
-                console.log("Books fetched:", books);
-                // Clear previous books and display new list
-                bookList.innerHTML = '';
-                books.forEach(addBookToList);
+                bookTableBody.innerHTML = '';  // Clear the table
+                books.forEach(addBookToTable);
             } else {
-                console.error("Failed to fetch books: Server returned non-OK status");
                 notifyUser("Failed to fetch the list of books.", "error");
             }
         } catch (error) {
@@ -61,21 +55,39 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const addBookToList = (book) => {
-        const bookItem = document.createElement("li");
-        bookItem.textContent = `${book.title} by ${book.author}`;
-        bookList.appendChild(bookItem);
+    const addBookToTable = (book) => {
+        const row = bookTableBody.insertRow();
+
+        const titleCell = row.insertCell(0);
+        titleCell.textContent = book.title;
+
+        const authorCell = row.insertCell(1);
+        authorCell.textContent = book.author;
+
+        const addedCell = row.insertCell(2);
+        addedCell.textContent = new Date(book.dateAdded).toLocaleString();
+
+        const editCell = row.insertCell(3);
+        const editButton = document.createElement("button");
+        editButton.textContent = "Edit";
+        editButton.className = "btn btn-warning";
+        editCell.appendChild(editButton);
+
+        const deleteCell = row.insertCell(4);
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.className = "btn btn-danger";
+        deleteCell.appendChild(deleteButton);
     };
 
     const notifyUser = (message, type) => {
         notification.textContent = message;
-        notification.className = type;
+        notification.className = `alert alert-${type}`;
         setTimeout(() => {
             notification.textContent = "";
             notification.className = "";
         }, 3000);
     };
 
-    // Load the list of books when the page is loaded
     loadBooks();
 });
