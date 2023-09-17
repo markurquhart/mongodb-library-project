@@ -52,13 +52,14 @@ async function initializeServer() {
         app.put('/books/:id', async (req, res) => {
             const bookId = req.params.id;
             const { title, author } = req.body;
-        
+
             if (!title || !author) {
                 return res.status(400).json({ error: "Both title and author are required!" });
             }
-        
+
             try {
-                const result = await db.collection('books').updateOne({ _id: new ObjectId(bookId) }, { $set: { title, author } });
+                const result = await db.collection('books').updateOne({ _id: new ObjectId(bookId) }, { $set: { title, author, updatedAt: new Date() } });
+                console.log("Update result:", result);
                 if (result.modifiedCount === 1) {
                     res.status(200).json({ message: "Book updated successfully." });
                 } else {
@@ -69,42 +70,44 @@ async function initializeServer() {
                 res.status(500).json({ error: "Failed to update book." });
             }
         });
-        
 
         app.delete('/books/:id', async (req, res) => {
             const bookId = req.params.id;
-        
+
             try {
-                // Change the conversion to use ObjectId
                 const result = await db.collection('books').deleteOne({ _id: new ObjectId(bookId) });
-        
+
                 if (result.deletedCount === 1) {
                     res.status(200).json({ message: "Book deleted successfully." });
                 } else {
                     console.error("No book found with this ID:", bookId);
                     res.status(404).json({ error: "No book found with this ID." });
                 }
-        
+
             } catch (error) {
                 console.error("Error deleting book:", error);
                 res.status(500).json({ error: "Failed to delete book." });
             }
         });
-        
+
         app.post('/books', async (req, res) => {
             console.log("Trying to add a book:", req.body);
             const newBook = {
                 title: req.body.title,
                 author: req.body.author,
+                createdAt: new Date(),  // Setting current timestamp when a book is created
+                updatedAt: new Date()   // Initially, both createdAt and updatedAt are the same
             };
-
+        
+            console.log("Constructed newBook object:", newBook);  // Log the constructed object
+        
             try {
                 const result = await db.collection('books').insertOne(newBook);
-
+        
                 console.log("Insertion result:", result);
-
+        
                 if (result && result.acknowledged) {
-                    const addedBook = { _id: result.insertedId, title: newBook.title, author: newBook.author };
+                    const addedBook = { _id: result.insertedId, ...newBook };
                     console.log("Book successfully added:", addedBook);
                     res.status(201).send(addedBook);
                 } else {
@@ -116,6 +119,7 @@ async function initializeServer() {
                 res.status(500).send('Failed to add book.');
             }
         });
+        
 
     } catch (err) {
         console.error('Failed to connect to the database.', err);
