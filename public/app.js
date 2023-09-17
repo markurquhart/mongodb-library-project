@@ -1,3 +1,24 @@
+function loadBooks() {
+    fetch('/books')
+    .then(response => response.json())
+    .then(books => {
+        const booksList = document.getElementById('booksList');
+        booksList.innerHTML = ''; // Clear any existing books
+        
+        books.forEach(book => {
+            const bookItem = document.createElement('li');
+            bookItem.textContent = `${book.title} by ${book.author}`;
+            booksList.appendChild(bookItem);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching books:', error);
+    });
+}
+
+// Call the function immediately to load books on page load
+loadBooks();
+
 document.getElementById('bookForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -16,38 +37,13 @@ document.getElementById('bookForm').addEventListener('submit', function(event) {
     })
     .then(response => response.json())
     .then(data => {
-        console.log('Book added:', data);
-        // Clear the form fields
+        alert('Book added successfully!');
         document.getElementById('title').value = '';
         document.getElementById('author').value = '';
-        // Reload the books
-        loadBooks();
+        
+        loadBooks(); // Refresh the list of books
     })
-    .catch(error => console.error('Error adding book:', error));
-});
-
-function loadBooks() {
-    fetch('/books')
-        .then(response => response.json())
-        .then(data => displayBooks(data))
-        .catch(error => console.error('Error fetching books:', error));
-}
-
-function displayBooks(books) {
-    const booksDiv = document.getElementById('booksList');
-    booksDiv.innerHTML = ''; // Clear the current list
-    
-    books.forEach(book => {
-        const bookCard = `
-        <div class="card mt-3">
-            <div class="card-body">
-                <h5 class="card-title">${book.title}</h5>
-                <p class="card-text">${book.author}</p>
-            </div>
-        </div>`;
-        booksDiv.innerHTML += bookCard;
+    .catch(error => {
+        console.error('Error adding book:', error);
     });
-}
-
-// Initial load of books
-loadBooks();
+});
