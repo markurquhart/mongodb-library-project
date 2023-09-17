@@ -56,6 +56,37 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
+    const editBook = async (bookId) => {
+        const title = prompt("Enter the new title for the book:");
+        const author = prompt("Enter the new author for the book:");
+    
+        if (!title || !author) {
+            notifyUser("Both title and author are required!", "error");
+            return;
+        }
+    
+        try {
+            const response = await fetch(`/books/${bookId}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ title, author })
+            });
+    
+            if (response.ok) {
+                loadBooks();
+                notifyUser("Book updated successfully!", "success");
+            } else {
+                notifyUser("Failed to update the book. Please try again.", "error");
+            }
+        } catch (error) {
+            console.error("Error during book update:", error);
+            notifyUser("Failed to update the book. Please check your server.", "error");
+        }
+    };
+    
+
     const loadBooks = async () => {
         try {
             const response = await fetch("/books");
@@ -91,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const editButton = document.createElement('button');
         editButton.textContent = 'Edit';
         editButton.className = 'btn btn-warning';
-        // TODO: Add edit functionality
+        editButton.onclick = () => editBook(book._id);
         editTd.appendChild(editButton);
         row.appendChild(editTd);
 

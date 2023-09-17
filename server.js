@@ -49,6 +49,28 @@ async function initializeServer() {
             }
         });
 
+        app.put('/books/:id', async (req, res) => {
+            const bookId = req.params.id;
+            const { title, author } = req.body;
+        
+            if (!title || !author) {
+                return res.status(400).json({ error: "Both title and author are required!" });
+            }
+        
+            try {
+                const result = await db.collection('books').updateOne({ _id: new ObjectId(bookId) }, { $set: { title, author } });
+                if (result.modifiedCount === 1) {
+                    res.status(200).json({ message: "Book updated successfully." });
+                } else {
+                    res.status(404).json({ error: "No book found with this ID." });
+                }
+            } catch (error) {
+                console.error("Error updating book:", error);
+                res.status(500).json({ error: "Failed to update book." });
+            }
+        });
+        
+
         app.delete('/books/:id', async (req, res) => {
             const bookId = req.params.id;
         
@@ -68,7 +90,7 @@ async function initializeServer() {
                 res.status(500).json({ error: "Failed to delete book." });
             }
         });
-
+        
         app.post('/books', async (req, res) => {
             console.log("Trying to add a book:", req.body);
             const newBook = {
