@@ -10,6 +10,12 @@ const uri = process.env.MONGO_CONNECT_STR;
 
 let db;
 
+// Middleware for parsing JSON requests
+app.use(express.json());
+
+// Serve static files from the "public" directory
+app.use(express.static('public'));
+
 MongoClient.connect(uri, function(err, client) {
     if (err) {
         console.error('Failed to connect to the database.', err);
@@ -24,6 +30,8 @@ MongoClient.connect(uri, function(err, client) {
     });
 });
 
+// This route may not be necessary since we're serving index.html from the public directory now
+// If you still want to send a string response on hitting the root, keep it.
 app.get('/', (req, res) => {
     res.send('Hello, MongoDB Library!');
 });
@@ -37,10 +45,6 @@ app.get('/books', (req, res) => {
         res.json(books);
     });
 });
-
-const bodyParser = require('body-parser');
-
-app.use(bodyParser.json());
 
 app.post('/books', (req, res) => {
     const newBook = {
