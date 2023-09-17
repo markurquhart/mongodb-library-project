@@ -1,8 +1,8 @@
 require('dotenv').config();
 
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const cors = require('cors');  // Import the cors package
+const { MongoClient } = require('mongodb');
+const cors = require('cors');  
 
 const app = express();
 const PORT = 3000;
@@ -10,7 +10,7 @@ const PORT = 3000;
 const uri = process.env.MONGO_CONNECT_STR;
 
 // Use the CORS middleware
-app.use(cors()); // Allow cross-origin requests
+app.use(cors()); 
 
 // Middleware for parsing JSON requests
 app.use(express.json());
@@ -22,14 +22,7 @@ let db;
 
 async function initializeServer() {
     try {
-        const client = new MongoClient(uri, {
-            serverApi: {
-                version: ServerApiVersion.v1,
-                strict: true,
-                deprecationErrors: true,
-            }
-        });
-
+        const client = new MongoClient(uri);
         await client.connect();
         console.log("Connected successfully to MongoDB");
 
@@ -40,40 +33,47 @@ async function initializeServer() {
         });
 
         app.get('/', (req, res) => {
-            console.log("Root route hit!");  // New log
+            console.log("Root route hit!"); 
             res.send('Hello, MongoDB Library!');
         });
 
-        app.get('/books', (req, res) => {
-            console.log("Fetching books...");  // New log
-            db.collection('books').find().toArray((err, books) => {
-                if (err) {
-                    console.error("Error fetching books:", err);  // New log
-                    res.status(500).send('Error fetching books.');
-                    return;
-                }
-                console.log("Books fetched:", books);  // New log
+        app.get('/books', async (req, res) => {
+            console.log("Fetching books...");  
+            try {
+                const books = await db.collection('books').find().toArray();
+                console.log("Books fetched:", books);  
                 res.json(books);
-            });
+            } catch (err) {
+                console.error("Error fetching books:", err);
+                res.status(500).send('Error fetching books.');
+            }
         });
 
-        app.post('/books', (req, res) => {
+        app.post('/books', async (req, res) => {
             console.log("Trying to add a book:", req.body);
             const newBook = {
                 title: req.body.title,
                 author: req.body.author,
             };
-        
-            db.collection('books').insertOne(newBook, (err, result) => {
-                if (err) {
-                    console.error("Error while inserting book:", err); // enhanced log
-                    res.status(500).send('Failed to add book.');
-                    return;
+
+            try {
+                const result = await db.collection('books').insertOne(newBook);
+
+                console.log("Insertion result:", result);
+
+                if (result && result.acknowledged) {
+                    const addedBook = { _id: result.insertedId, title: newBook.title, author: newBook.author };
+                    console.log("Book successfully added:", addedBook);
+                    res.status(201).send(addedBook);
+                } else {
+                    console.error("Unexpected result structure:", result);
+                    res.status(500).send('Unexpected result after book insertion.');
                 }
-                console.log("Book successfully added:", result.ops[0]); // enhanced log
-                res.status(201).send(result.ops[0]);
-            });
-        });        
+            } catch (error) {
+                console.error("Error during insertion:", error);
+                res.status(500).send('Failed to add book.');
+            }
+        });
 
     } catch (err) {
         console.error('Failed to connect to the database.', err);
