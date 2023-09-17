@@ -2,11 +2,15 @@ require('dotenv').config();
 
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const cors = require('cors');  // Import the cors package
 
 const app = express();
 const PORT = 3000;
 
 const uri = process.env.MONGO_CONNECT_STR;
+
+// Use the CORS middleware
+app.use(cors()); // Allow cross-origin requests
 
 // Middleware for parsing JSON requests
 app.use(express.json());
@@ -36,20 +40,25 @@ async function initializeServer() {
         });
 
         app.get('/', (req, res) => {
+            console.log("Root route hit!");  // New log
             res.send('Hello, MongoDB Library!');
         });
 
         app.get('/books', (req, res) => {
+            console.log("Fetching books...");  // New log
             db.collection('books').find().toArray((err, books) => {
                 if (err) {
+                    console.error("Error fetching books:", err);  // New log
                     res.status(500).send('Error fetching books.');
                     return;
                 }
+                console.log("Books fetched:", books);  // New log
                 res.json(books);
             });
         });
 
         app.post('/books', (req, res) => {
+            console.log("Trying to add a book:", req.body);  // New log
             const newBook = {
                 title: req.body.title,
                 author: req.body.author,
@@ -57,9 +66,11 @@ async function initializeServer() {
 
             db.collection('books').insertOne(newBook, (err, result) => {
                 if (err) {
+                    console.error("Error adding book:", err);  // New log
                     res.status(500).send('Failed to add book.');
                     return;
                 }
+                console.log("Book added:", result.ops[0]);  // New log
                 res.status(201).send(result.ops[0]);
             });
         });
