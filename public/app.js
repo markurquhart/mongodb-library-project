@@ -104,34 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    const updateBookDetails = async (bookId, newTitle, newAuthor) => {
-        if (!newTitle || !newAuthor) {
-            notifyUser("Both title and author are required!", "error");
-            return;
-        }
-    
-        try {
-            const response = await fetch(`/books/${bookId}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ title: newTitle, author: newAuthor })
-            });
-    
-            if (response.ok) {
-                loadBooks();
-                notifyUser("Book updated successfully!", "success");
-            } else {
-                notifyUser("Failed to update the book. Please try again.", "error");
-            }
-        } catch (error) {
-            console.error("Error during book update:", error);
-            notifyUser("Failed to update the book. Please check your server.", "error");
-        }
-    };
-    
-
     const addBookToList = (book) => {
         const row = document.createElement('tr');
     
@@ -176,41 +148,48 @@ document.addEventListener("DOMContentLoaded", () => {
         row.appendChild(updatedTd);
 
     
-        // Edit/Update cell
+       // Edit/Update cell
         const editTd = document.createElement('td');
         const editButton = document.createElement('button');
-    
+
         editButton.textContent = 'Edit';
         editButton.className = 'btn btn-warning';
-        editButton.onclick = function() {
+        editButton.onclick = async function() {
             if (editButton.textContent === 'Edit') {
                 editButton.textContent = 'Update';
                 editButton.className = 'btn btn-success';
-    
+
                 titleSpan.style.display = 'none';
                 titleInput.style.display = 'block';
                 titleInput.focus();  // This will put the cursor in the title input field
-    
+
                 authorSpan.style.display = 'none';
                 authorInput.style.display = 'block';
             } else {
-                // Here, you should ideally trigger an update call to the server
-                // Only update the text content and visuals after a successful response
-                // You can move the update functionality here instead of the separate update button
-    
-                titleSpan.textContent = titleInput.value;
-                titleSpan.style.display = 'block';
-                titleInput.style.display = 'none';
-    
-                authorSpan.textContent = authorInput.value;
-                authorSpan.style.display = 'block';
-                authorInput.style.display = 'none';
-    
-                editButton.textContent = 'Edit';
-                editButton.className = 'btn btn-warning';
+                // Updating the book on the server before updating the visuals
+                try {
+                    const response = await fetch(`/books/${book._id}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ title: titleInput.value, author: authorInput.value })
+                    });
+
+                    if (response.ok) {
+                        // Successful update
+                        loadBooks();
+                        notifyUser("Book updated successfully!", "success");
+                    } else {
+                        notifyUser("Failed to update the book. Please try again.", "error");
+                    }
+                } catch (error) {
+                    console.error("Error during book update:", error);
+                    notifyUser("Failed to update the book. Please check your server.", "error");
+                }
             }
         };
-    
+
         editTd.appendChild(editButton);
         row.appendChild(editTd);
     
